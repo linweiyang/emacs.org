@@ -1,0 +1,480 @@
+#+TITLE: wylin's emacs configuration
+
+* Org Mode Setting
+#+begin_src emacs-lisp
+;;(require-package 'org-bullets)
+;;(require 'org-bullets)
+
+;;(add-hook 'org-mode-hook
+;;         (lambda () (org-bullets-mode 1)))
+
+;; highlight source block
+(setq org-src-fontify-natively t)
+
+#+end_src
+
+
+* Auto Complete Mode
+#+begin_src emacs-lisp
+(require-package 'auto-complete)
+
+(require 'auto-complete)
+(require 'auto-complete-config)
+(setq-default ac-expand-on-auto-complete t)
+(setq-default ac-auto-start t)
+(setq-default ac-dwim t) ; To get pop-ups with docs even if a word is uniquely completed
+
+;;使用增强列表
+(require-package 'pos-tip)
+(require 'pos-tip)
+(setq ac-quick-help-prefer-pos-tip t)
+;;启用默认ac设置
+(ac-config-default)
+(auto-complete-mode 1)
+;;添加backspac触发列表
+(setq ac-trigger-commands
+      (cons 'backward-delete-char-untabify ac-trigger-commands))
+;;使用帮助模式
+(setq ac-use-quick-help t)
+(setq ac-quick-help-delay 1.0)
+;;开启ac-dwin
+(setq ac-dwim t)
+;;设置ac数据文件位置
+;;(setq ac-comphist-file (expand-file-name "ac-comphist/ac-comphist.dat" prelude-savefile-dir))
+;;(check-temp-dir (expand-file-name "ac-comphist/" prelude-savefile-dir))
+;;添加ac补全源
+(set-default 'ac-sources
+             '(ac-source-semantic ;;ac使用semantic的分析结果
+               ac-source-yasnippet
+               ac-source-abbrev
+               ac-source-words-in-buffer
+               ac-source-words-in-all-buffer
+               ac-source-imenu
+               ac-source-files-in-current-dir
+               ac-source-filename))
+
+;;yasnippet补全源的界面显示设置，这里颜色是红色的，用来与ac本身的补全相区分
+(defface ac-yasnippet-candidate-face
+  '((t (:background "sandybrown" :foreground "black")))
+  "Face for yasnippet candidate.")
+
+(defface ac-yasnippet-selection-face
+  '((t (:background "coral3" :foreground "white")))
+  "Face for the yasnippet selected candidate.")
+
+(defvar ac-source-yasnippet
+  '((candidates . ac-yasnippet-candidate)
+    (action . yas/expand)
+    (candidate-face . ac-yasnippet-candidate-face)
+    (selection-face . ac-yasnippet-selection-face))
+  "Source for Yasnippet.")
+
+#+end_src
+
+
+* Reveal presentation
+#+begin_src emacs-lisp
+(require-package 'htmlize)
+(require-package 'ox-reveal)
+(require 'ox-reveal)
+
+(setq org-reveal-root "https://cdn.jsdelivr.net/reveal.js/3.0.0/")
+(setq org-reveal-mathjax t)
+
+#+end_src
+
+
+* Emacs Setting
+#+begin_src emacs-lisp
+(setq ring-bell-function 'ignore)
+(set-face-attribute 'default nil :height font_size)
+
+#+end_src
+
+
+* LaTeX Setting
+#+begin_src emacs-lisp
+(require-package 'auctex)
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; (add-hook 'LaTeX-mode-hook                                                                         ;;
+;;           (lambda()                                                                                     ;;
+;;             (add-to-list 'TeX-command-list '("XeLaTeX" "%`xelatex%(mode)%' %t" TeX-run-TeX nil t)) ;;
+;;             (setq TeX-command-default "XeLaTeX")))                                                 ;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;;'(Latex-command "latex -synctex=1")
+
+;; only start server for okular comms when in latex mode
+;; (add-hook 'LaTeX-mode-hook 'server-start)
+(setq TeX-PDF-mode t) ;; use pdflatex instead of latex
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Standard emacs/latex config
+;; http://emacswiki.org/emacs/AUCTeX
+(setq TeX-auto-save t)
+(setq TeX-parse-self t)
+(setq-default TeX-master nil)
+
+(add-hook 'LaTeX-mode-hook 'visual-line-mode)
+(add-hook 'LaTeX-mode-hook 'ac-flyspell-workaround)
+(add-hook 'LaTeX-mode-hook 'LaTeX-math-mode)
+;; flyspell-mode has a conflict of commom shortcuts, if you want to use it M-x flyspell-mode
+;;(add-hook 'LaTeX-mode-hook 'flyspell-mode)
+
+;; enable auto-fill mode, nice for text
+(add-hook 'LaTeX-mode-hook 'auto-fill-mode)
+(add-hook 'LaTeX-mode-hook 'turn-on-reftex)
+(setq reftex-plug-into-AUCTeX t)
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;; enable auto complete mode, added by wylin
+(add-hook 'LaTeX-mode-hook 'auto-complete-mode)
+;; enable source correlate mode, for synctex
+(add-hook 'LaTeX-mode-hook 'TeX-source-correlate-mode)
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Enable synctex correlation
+(setq TeX-source-correlate-method 'synctex)
+;; Enable synctex generation. Even though the command shows
+;; as "latex" pdflatex is actually called
+(custom-set-variables '(LaTeX-command "latex -synctex=1") )
+'(LaTeX-command "latex -synctex=1")
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+;; use Skim as default pdf viewer
+;; Skim's displayline is used for forward search (from .tex to .pdf)
+;; option -b highlights the current line; option -g opens Skim in the background
+;;(setq TeX-view-program-selection '((output-pdf "PDF Viewer")))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; (when *is-a-mac*                                                                                      ;;
+;;   (setq TeX-view-program-list                                                                         ;;
+;;         '(("PDF Viewer" "/Applications/Skim.app/Contents/SharedSupport/displayline -b -g %n %o %b"))) ;;
+;;   )                                                                                                   ;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(setq TeX-view-program-selection '((output-pdf "PDF Viewer")))
+(cond
+ ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+ ;; Latex for Emacs in Windows
+ ;;
+ ;; Dependencies: SumatraPDF.exe, ctex, auctex
+ ;;
+ ;; SumatraPDF.exe setup:
+ ;; 1.) Open SumatraPDF.exe and go to...
+ ;; 2.) Settings -> Configure
+ ;; 3.) Command should automatically set to:
+ ;;    "d:\emacs-24.5\bin\emacsclient.exe" --no-wait +%l "%f"
+ ;; 4.) inverse search: mouse double left clicks
+ ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+ ((eq system-type 'windows-nt)
+  (setq TeX-view-program-list
+        '(("PDF Viewer" ("\"SumatraPDF.exe\" -reuse-instance"
+                         (mode-io-correlate " -forward-search %b %n ") " %o"))))
+  )
+
+
+ ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+ ;; Latex for Emacs in Mac OSX
+ ;;
+ ;; Dependencies: Skim, MacTeX, auctex
+ ;;
+ ;; Skim setup:
+ ;; 1.) Open Skim and go to...
+ ;; 2.) Preferences -> Sync
+ ;; 3.) Command should automatically set to:
+ ;;   a) Preset:   Custom
+ ;;   b) Command:  /Applications/Emacs.app/Contents/MacOS/bin/emacsclient
+ ;;   c) Argments: --no-wait +%line "%file"
+ ;; 4.) inverse search: command + shift + mouse left click
+ ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+ ((eq system-type 'darwin)
+  (setq TeX-view-program-list
+        '(("PDF Viewer" "/Applications/Skim.app/Contents/SharedSupport/displayline -b %n %o %b")))
+  )
+
+ ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+ ;; Latex for Emacs in Ubuntu
+ ;;
+ ;; Dependencies: okular, texlive-full, auctex
+ ;;
+ ;; Okular setup:
+ ;; 1.) Open Okular and go to...
+ ;; 2.) Settings -> Configure Okular -> Editor
+ ;; 3.) Set Editor to "Emacs client"
+ ;; 4.) Command should automatically set to:
+ ;;     emacsclient -a emacs --no-wait +%l %f
+ ;; 5.) inverse search : shift + mouse left click
+ ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+ (t ;; for Linux OS
+  (setq TeX-view-program-list
+        '(("PDF Viewer" "okular --unique %o#src:%n%b")))
+  )
+ )
+#+end_src
+
+
+* UML plugin module
+
+#+begin_src emacs-lisp
+(require-package 'plantuml-mode)
+(require 'plantuml-mode)
+
+;; active Org-babel languages
+;;(org-babel-do-load-languages
+;; 'org-babel-load-languages
+;; '(;; other Babel languages
+;;   (plantuml . t)))
+
+;;(setq org-plantuml-jar-path
+;;      (expand-file-name "~/.emacs.d/lisp/wylin-emacs/plantuml.jar"))
+
+#+end_src
+
+
+* Doxygen package
+#+begin_src emacs-lisp
+(autoload 'doxygen-insert-function-comment "doxygen" "insert comment for the function at point" t)
+(autoload 'doxygen-insert-file-comment "doxygen" "insert comment for file" t)
+(autoload 'doxygen-insert-member-group-region "doxygen" "insert comment for member group" t)
+(autoload 'doxygen-insert-compound-comment "doxygen" "insert comment for compound" t)
+
+(defun my-cc-init-hook ()
+  "Initialization hook for CC-mode runs before any other hooks."
+  (setq c-doc-comment-style
+        '((java-mode . javadoc)
+          (pike-mode . autodoc)
+          (c-mode    . javadoc)
+          (c++-mode  . javadoc)))
+  (set-face-foreground 'font-lock-doc-face
+                       (face-foreground font-lock-comment-face)))
+;;(add-hook 'c++-initialization-hook 'my-cc-init-hook)
+(my-cc-init-hook)
+#+end_src
+
+
+* Ctags package
+#+begin_src emacs-lisp
+;; Don't ask before rereading the TAGS files if they have changed
+(setq tags-revert-without-query t)
+;; Do case-sensitive tag searches
+(setq tags-case-fold-search nil) ;; t=case-insensitive, nil=case-sensitive
+;; Don't warn when TAGS files are large
+(setq large-file-warning-threshold nil)
+
+(if *is-a-mac*
+  ; Mac's default ctags does not support -e option
+  ; If you install Emacs by homebrew, another version of etags is already installed which does not need -e too
+  ;; the best option is to install latest ctags from sf.net
+  (setq ctags-command "/usr/local/bin/ctags -e -R "))
+
+;; {{ etags-select
+(autoload 'etags-select-find-tag-at-point "etags-select" "" t nil)
+(autoload 'etags-select-find-tag "etags-select" "" t nil)
+;; }}
+
+#+end_src
+
+
+* CUDA Mode
+#+begin_src emacs-lisp
+(require-package 'cuda-mode)
+(require 'cuda-mode)
+
+(add-to-list 'auto-mode-alist '("\\.cu\\'" . cuda-mode))
+
+#+end_src
+
+
+* Yasnippet package
+#+begin_src emacs-lisp
+(require-package 'yasnippet)
+
+(require 'yasnippet)
+(yas-global-mode 1)
+
+#+end_src
+
+
+* Swiper Mode
+#+begin_src emacs-lisp
+;; https://github.com/abo-abo/swiper
+(require-package 'swiper)
+(require 'swiper)
+
+(when (maybe-require-package 'swiper)
+  (after-load 'ivy
+    (define-key ivy-mode-map (kbd "C-s") 'swiper)
+    (define-key ivy-mode-map (kbd "C-r") 'swiper)))
+
+;; (ivy-mode 1)
+;; (setq ivy-use-virtual-buffers t)
+;; (setq enable-recursive-minibuffers t)
+;; (global-set-key "\C-s" 'swiper)
+;; (global-set-key (kbd "C-c C-r") 'ivy-resume)
+;; (global-set-key (kbd "<f6>") 'ivy-resume)
+;; (global-set-key (kbd "M-x") 'counsel-M-x)
+;; (global-set-key (kbd "C-x C-f") 'counsel-find-file)
+;; (global-set-key (kbd "<f1> f") 'counsel-describe-function)
+;; (global-set-key (kbd "<f1> v") 'counsel-describe-variable)
+;; (global-set-key (kbd "<f1> l") 'counsel-find-library)
+;; (global-set-key (kbd "<f2> i") 'counsel-info-lookup-symbol)
+;; (global-set-key (kbd "<f2> u") 'counsel-unicode-char)
+;; (global-set-key (kbd "C-c g") 'counsel-git)
+;; (global-set-key (kbd "C-c j") 'counsel-git-grep)
+;; (global-set-key (kbd "C-c k") 'counsel-ag)
+;; (global-set-key (kbd "C-x l") 'counsel-locate)
+;; (global-set-key (kbd "C-S-o") 'counsel-rhythmbox)
+;; (define-key read-expression-map (kbd "C-r") 'counsel-expression-history)
+
+#+end_src
+
+
+* C/C++ Mode Setting
+** flymake with Google C
+
+   #+begin_src emacs-lisp
+;;start flymake-google-cpplint-load
+;;let's define a function for flymake initialization
+;;step 1. install cpplint with "sudo pip install cpplint" command (install python-pip first)
+
+(require-package 'flymake-google-cpplint)
+(defun my:flymake-google-init ()
+  (require 'flymake-google-cpplint)
+  (custom-set-variables
+   '(flymake-google-cpplint-command "~/.emacs.d/lisp/wylin-emacs/mycpplint"))
+  (flymake-google-cpplint-load)
+  )
+(add-hook 'c-mode-hook 'my:flymake-google-init)
+(add-hook 'c++-mode-hook 'my:flymake-google-init)
+;; Flymake-google-style-mode
+
+;; start google-c-style with emacs
+(require-package 'google-c-style)
+(require 'google-c-style)
+(add-hook 'c-mode-common-hook 'google-set-c-style)
+(add-hook 'c++-mode-common-hook 'google-set-c-style)
+   #+end_src
+
+** Auto complete for C/C++
+#+begin_src emacs-lisp
+;; auto-complete
+(require-package 'auto-complete)
+(require 'auto-complete)
+(require 'auto-complete-config)
+
+;; auto-complete-c-headers
+(require-package 'auto-complete-c-headers)
+;; gcc -xc++ -E -v -  to check the include folders
+(defun my:ac-c-header-init ()
+  (require 'auto-complete-c-headers)
+  (add-to-list 'ac-sources 'ac-source-c-headers)
+  ;;  (add-to-list 'achead:include-directories '"/Applications/Xcode.app")
+  )
+
+(add-hook 'c++-mode-hook 'my:ac-c-header-init)
+(add-hook 'c-mode-hook 'my:ac-c-header-init)
+
+;; tab setting
+(defun my-c-mode-hook ()
+  (setq c-basic-offset 4          ;; 基本缩进宽度
+        indent-tabs-mode t        ;; 禁止空格替换Tab
+        default-tab-width 4));; 默认Tab宽度
+(add-hook 'c++-mode-hook 'my-c-mode-hook)
+(add-hook 'c-mode-hook 'my-c-mode-hook)
+#+end_src
+
+
+
+*
+
+** Semantic
+#+begin_src emacs-lisp
+(require 'semantic)
+(semantic-mode 1)
+;; (semantic-load-enable-minimum-features)
+;; (semantic-load-enable-code-helpers)
+;; (semantic-load-enable-guady-code-helpers)
+;; (semantic-load-enable-excessive-code-helpers)
+;; (semantic-load-enable-semantic-debugging-helpers)
+
+;; let's define a function which adds semantic as a suggestion backend to auto complete and hook this function to c-mode-common-hook
+(defun my:add-semantic-to-autocomplete ()
+  (add-to-list 'ac-sources 'ac-source-semantic)
+  )
+(add-hook 'c-mode-common-hook 'my:add-semantic-to-autocomplete)
+
+;; Enable EDE (Project Management)
+(global-ede-mode 1)
+
+;; create a project for our program.
+;;(ede-cpp-root-program "my project" : file "~/demos/my_program/src/main.cpp"
+;;                    :include-path '("/../my_inc"))
+
+;; you can use system-include-path for setting up the system header file locations.
+;; turn on automatic reparsing of open buffers in semantic
+(global-semantic-idle-scheduler-mode 1)
+
+;; clang please see the youtube emacs C++
+
+#+end_src
+
+** Cmake IDE
+#+begin_src emacs-lisp
+(require-package 'flycheck)
+(require-package 'auto-complete-clang)
+(require-package 'auto-complete-clang-async)
+(require-package 'company-rtags)
+(require-package 'company)
+(require-package 'helm)
+(require-package 'irony)
+(require-package 'rtags)
+(require-package 'cmake-ide)
+
+(require 'rtags) ;; optional, must have rtags installed
+(require 'company-rtags)
+(cmake-ide-setup)
+
+(setq rtags-completions-enabled t)
+(eval-after-load 'company
+  '(add-to-list
+    'company-backends 'company-rtags))
+(setq rtags-autostart-diagnostics t)
+(rtags-enable-standard-keybindings)
+
+(setq rtags-use-helm t)
+
+(add-hook 'c-mode-common-hook 'rtags-start-process-unless-running)
+(add-hook 'c++-mode-common-hook 'rtags-start-process-unless-running)
+#+end_src
+
+
+* Maxima for macOS
+#+begin_src emacs-lisp
+(when *is-a-mac*
+  (add-to-list 'load-path "/usr/local/Cellar/maxima/5.38.1/share/maxima/5.38.1/emacs")
+  (autoload 'maxima-mode "maxima" "Maxima mode" t)
+  (autoload 'imaxima "imaxima" "Frontend for maxima with Image support" t)
+  (autoload 'maxima "maxima" "Maxima interaction" t)
+  (autoload 'imath-mode "imath" "Imath mode for math formula input" t)
+  (setq imaxima-use-maxima-mode-flag t)
+  (add-to-list 'auto-mode-alist '("\\.ma[cx]" . maxima-mode))
+  )
+#+end_src
+
+
+* emacs key mapping
+#+begin_src emacs-lisp
+(when *is-a-mac*
+  (global-set-key (kbd "¥") "\\") ;; for my hhkb lite keyboard.
+  ;; Fix iedit bug in macOS
+  (require-package 'iedit)
+  (define-key global-map (kbd "C-c ;") 'iedit-mode)
+  )
+
+(global-set-key "\C-h" 'backward-delete-char)
+
+#+end_src
